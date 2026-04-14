@@ -1,5 +1,6 @@
 package com.github.zipcodewilmington;
 
+import java.util.Random;
 import java.util.Scanner;
 
 /**
@@ -9,10 +10,12 @@ import java.util.Scanner;
  */
 
 public class WordGuess {
-
-    private final char[] secretWord = "Liverpool".toCharArray();
+    private final String[] words = {"New York City", "Miami", "Los Angeles"};
+    private char[] secretWord;
     private char[] guessedLetters;
-    private int remainingAttempts = secretWord.length;\
+    private int remainingAttempts;
+    private String guessedHistory = "";
+    private String wrongHistory = "";
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -22,26 +25,61 @@ public class WordGuess {
 
     public void runGame(Scanner scanner) {
 
-        while (remainingAttempts > 0) {
-            System.out.println(secretWord);
+        boolean play = true;
+        while (play) {
+        Random rand = new Random();
+        int randInt = rand.nextInt(words.length);
+        secretWord = words[randInt].toUpperCase().toCharArray();
+        guessedHistory = "";
+        wrongHistory = "";
 
-
-            remainingAttempts--;
+        announceGame();
+        initialiseGameState();
+        int count = 0;
+        for (int i = 0; i < secretWord.length; i++) {
+            if (secretWord[i] != ' ') {
+                count++;
+            }
         }
+        remainingAttempts = count;
+
+            while(remainingAttempts > 0 && !isWordGuessed()) {
+                printCurrentState();
+                char guess = getNextGuess(scanner);
+                if(!process(guess)) {
+                    remainingAttempts--;
+                    wrongHistory = wrongHistory + guess + " ";
+                }
+            }
+            if(isWordGuessed()) {
+                playerWon();
+                printWord();
+            } else {
+                playerLost();
+                revealWord();
+            }
+            play = askToPlayAgain(scanner);
+        }
+        gameOver(); 
     }
 
     public void announceGame() {
         System.out.println("Welcome to Michael's WordGuess.");
+        System.out.println("I have picked a random word.");
     }
 
     public void gameOver() {
         System.out.println("Game Over :( .");
     }
 
-    public void initializeGameState() {
+    public void initialiseGameState() {
         guessedLetters = new char[secretWord.length];
         for (int i = 0; i < guessedLetters.length; i++) {
+            if (secretWord[i] == ' ') {
+            guessedLetters[i] = ' ';
+        } else {
             guessedLetters[i] = '_';
+        }
         }
     }
 
@@ -53,11 +91,16 @@ public class WordGuess {
                 System.out.println("Invalid input. Please enter one character");
                 continue;
             }
-            char guess = input.charAt(0);
+            char guess = Character.toUpperCase(input.charAt(0));
             if(!((guess >= 'a' && guess <= 'z') || (guess >= 'A' && guess <= 'Z'))) {
                 System.out.println("Invalid input. Please enter one character");
                 continue;
             }
+            if (guessedHistory.contains(String.valueOf(guess))) {
+            System.out.println("You already guessed that letter");
+            continue;
+            }
+            guessedHistory = guessedHistory + guess + " ";
             return guess;
         }
     }
@@ -73,11 +116,11 @@ public class WordGuess {
 
     public boolean askToPlayAgain(Scanner scanner) {
         while (true){
-            System.out.print("Do you want to play again? (Yes/No)");
-            String input = scanner.nextLine().toLowerCase();
-            if(input.equals("yes") || input.equals("y")) {
+            System.out.println("Do you want to play again? (Yes/No)");
+            String input = scanner.nextLine().toUpperCase();
+            if(input.equals("YES") || input.equals("Y")) {
                 return true;
-            } else if(input.equals("no") || input.equals("n")) {
+            } else if(input.equals("NO") || input.equals("N")) {
                 return false;
             } else {
                 System.out.println("Invalid input.");
@@ -91,14 +134,33 @@ public class WordGuess {
             }
         System.out.println();
         System.out.println("You have " + remainingAttempts + " remaining attempts");
+        System.out.println("Wrong guesses:" + wrongHistory);
     }
 
-    public void process(char guess) {
+    public boolean process(char guess) {
+        boolean isCorrect = false;
         for(int i = 0;i < secretWord.length;i++) {
             if(secretWord[i] == guess) {
                 guessedLetters[i] = guess;
+                isCorrect = true;
             }
         }
+        return isCorrect;
+    }
+
+    public void printWord() {
+        for (int i = 0; i < guessedLetters.length; i++) {
+            System.out.print(guessedLetters[i] + " ");
+        }
+        System.out.println();
+    }
+
+    public void revealWord() {
+        System.out.print("The Secret Word is: ");
+        for (int i = 0; i < secretWord.length; i++) {
+            System.out.print(secretWord[i] + " ");
+            }
+        System.out.println();
     }
 
     public void playerWon() {
@@ -106,9 +168,8 @@ public class WordGuess {
     }
 
     public void playerLost() {
-        System.out.println("Loser.");
+        System.out.println("I've seen random guesses do better than that.");
     }
-
 }
 
 
