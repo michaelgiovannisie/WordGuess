@@ -1,5 +1,10 @@
 package com.github.zipcodewilmington;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -10,7 +15,6 @@ import java.util.Scanner;
  */
 
 public class WordGuess {
-    private final String[] words = {"New York City", "Miami", "Los Angeles"};
     private char[] secretWord;
     private char[] guessedLetters;
     private int remainingAttempts;
@@ -27,9 +31,7 @@ public class WordGuess {
 
         boolean play = true;
         while (play) {
-        Random rand = new Random();
-        int randInt = rand.nextInt(words.length);
-        secretWord = words[randInt].toUpperCase().toCharArray();
+        secretWord = loadRandomWord();
         guessedHistory = "";
         wrongHistory = "";
 
@@ -134,7 +136,7 @@ public class WordGuess {
             }
         System.out.println();
         System.out.println("You have " + remainingAttempts + " remaining attempts");
-        System.out.println("Wrong guesses:" + wrongHistory);
+        System.out.println("Wrong guesses :" + wrongHistory);
     }
 
     public boolean process(char guess) {
@@ -164,11 +166,26 @@ public class WordGuess {
     }
 
     public void playerWon() {
-        System.out.println("What a Legend!");
+        System.out.println("Genius!");
     }
 
     public void playerLost() {
         System.out.println("I've seen random guesses do better than that.");
+    }
+
+    public char[] loadRandomWord() {
+        List<String> words = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader("src/main/java/com/github/zipcodewilmington/places.csv"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                words.add(line.trim());
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading file.");
+        }
+        Random random = new Random();
+        String chosenWord = words.get(random.nextInt(words.size())).toUpperCase();
+        return chosenWord.toCharArray();
     }
 }
 
